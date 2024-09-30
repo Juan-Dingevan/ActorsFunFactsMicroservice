@@ -9,36 +9,31 @@ const app = express();
 const PORT = 3000;
 
 app.get('/fun-fact', async (req, res) => {
-  try {
-    const response = await axios.get(`https://api.themoviedb.org/3/person/popular?api_key=${API_KEY}`);
-    const persons = response.data.results;
-
-    //console.log(`https://api.themoviedb.org/3/person/popular?api_key=${API_KEY}`)
-    //console.log(persons)
-
-    if (persons && persons.length > 0) {
-      const randomPerson = persons[Math.floor(Math.random() * persons.length)];
-      
-      const knownFor = randomPerson.known_for[0].title;
-      const name = randomPerson.name;
-      const genderLetter = randomPerson.gender == 1 ? 'a' : 'o';
-
-      let texto = name + " es conocid" + genderLetter + " por " + knownFor + "."
-
-      if(!knownFor) {
-        texto = name + " no es muy es conocid" + genderLetter + "."
+    try {
+      const response = await axios.get(`https://api.themoviedb.org/3/person/popular?api_key=${API_KEY}`);
+      const persons = response.data.results;
+  
+      if (persons && persons.length > 0) {
+        const randomPerson = persons[Math.floor(Math.random() * persons.length)];
+        
+        let knownFor = randomPerson.known_for[0]?.title || randomPerson.known_for[0]?.name;
+        const name = randomPerson.name;
+        const genderLetter = randomPerson.gender == 1 ? 'a' : 'o';
+  
+        let texto = knownFor 
+          ? `${name} es conocid${genderLetter} por ${knownFor}.` 
+          : `${name} no es muy conocid${genderLetter}.`;
+  
+        res.json({ texto });
+      } else {
+        res.status(404).json({ error: res.statusMessage });
       }
-
-      res.json(texto);
-    } else {
-      res.status(404).json({ error: res.statusMessage });
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Failed to fetch data from the API' });
     }
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: 'Failed to fetch data from the API' });
-  }
-});
-
-app.listen(PORT, () => {
-  console.log(`Server is running on http://localhost:${PORT}`);
-});
+  });
+  
+  app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+  });
